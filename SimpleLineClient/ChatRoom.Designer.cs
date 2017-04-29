@@ -75,6 +75,7 @@
             this.Text = "Form2";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ChatRoom_FormClosing);
             this.VisibleChanged += new System.EventHandler(this.ChatRoom_VisibleChanged);
+            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ChatRoom_MouseDown);
             this.ResumeLayout(false);
 
         }

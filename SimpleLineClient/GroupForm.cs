@@ -14,12 +14,10 @@ namespace SimpleLineClient
     {
         public string groupname;
         public string groupid;
-        public bool result;
 
         public GroupForm()
         {
             InitializeComponent();
-            result = false;
         }
 
         private void CreateSelect_Click(object sender, EventArgs e)
@@ -38,7 +36,6 @@ namespace SimpleLineClient
         {
             this.groupname = Groupname.Text;
             this.groupid = "";
-            this.result = true;
             this.DialogResult = DialogResult.OK;
             this.Dispose();
         }
@@ -47,7 +44,6 @@ namespace SimpleLineClient
         {
             this.groupname = "";
             this.groupid = Groupid.Text;
-            this.result = true;
             this.DialogResult = DialogResult.OK;
             this.Dispose();
         }

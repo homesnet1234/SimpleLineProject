@@ -244,22 +244,41 @@ namespace SimpleLineProject
                     {
                         GroupInformation groupinfo = xml.Deserialize(mem) as GroupInformation;
 
-                        if (string.IsNullOrEmpty(groupinfo.groupid))
+                        if (groupinfo.command == (int)GroupInformation.operation.Create)
                         {
                             groupinfo.groupid = groups.Count.ToString("00000");
                             Group group = new Group();
                             group.groupid = groupinfo.groupid;
                             group.groupname = groupinfo.groupname;
                             groups.Add(group);
+
+                            users[Int32.Parse(groupinfo.user.UserId)].groupinfoes.Add(groupinfo);
+                            groups[Int32.Parse(groupinfo.groupid)].AddMember(users[Int32.Parse(groupinfo.user.UserId)]);
                         }
-                        else
+                        else if (groupinfo.command == (int)GroupInformation.operation.Join)
                         {
                             groupinfo.groupname = groups[Int32.Parse(groupinfo.groupid)].groupname;
                             groupinfo.groupid = string.Format("00000", groupinfo.groupid);
+
+                            users[Int32.Parse(groupinfo.user.UserId)].groupinfoes.Add(groupinfo);
+                            groups[Int32.Parse(groupinfo.groupid)].AddMember(users[Int32.Parse(groupinfo.user.UserId)]);
+                        }
+                        else if (groupinfo.command == (int)GroupInformation.operation.Leave)
+                        {
+                            groups[Int32.Parse(groupinfo.groupid)].RemoveMember(user);
+                            foreach (GroupInformation g in users[Int32.Parse(groupinfo.user.UserId)].groupinfoes)
+                            {
+                                if (g.groupid == groupinfo.groupid)
+                                {
+                                    lock (users)
+                                    {
+                                        users[Int32.Parse(groupinfo.user.UserId)].groupinfoes.Remove(g);
+                                    }
+                                    break;
+                                }
+                            }
                         }
 
-                        users[Int32.Parse(groupinfo.user.UserId)].groupinfoes.Add(groupinfo);
-                        groups[Int32.Parse(groupinfo.groupid)].AddMember(users[Int32.Parse(groupinfo.user.UserId)]);
                         UpdateUI();
 
                         mem = new MemoryStream();

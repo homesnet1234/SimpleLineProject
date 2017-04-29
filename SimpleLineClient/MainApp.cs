@@ -82,6 +82,8 @@ namespace SimpleLineClient
                     User user = xml.Deserialize(mem) as User;
                     this.user = user;
 
+                    this.Refresh();
+
                     continue;
                 }
 
@@ -113,10 +115,24 @@ namespace SimpleLineClient
                 if (xml.CanDeserialize(reader))
                 {
                     GroupInformation groupinfo = xml.Deserialize(mem) as GroupInformation;
-
-                    // Create ChatRoom
                     ChatRoom room = new ChatRoom(user, groupinfo, stream);
-                    rooms.Add(room);
+
+                    if (groupinfo.command == (int)GroupInformation.operation.Leave)
+                    {   // Remove ChatRoom
+                        foreach (ChatRoom r in rooms)
+                        {
+                            if (r.groupinfo.groupid == groupinfo.groupid)
+                            {
+                                Invoke((MethodInvoker)(() => r.Dispose()));
+                                rooms.Remove(r);
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {   // Create ChatRoom
+                        rooms.Add(room);
+                    }
 
                     Invoke((MethodInvoker)(() => this.Refresh()));
 
@@ -151,6 +167,9 @@ namespace SimpleLineClient
 
         private void Form1_MouseDown(object sender, MouseEventArgs e)
         {
+            if (!e.Button.Equals(MouseButtons.Left))
+                return;
+
             if (e.Y <= 60 && e.X >= this.Width - this.PreferredSize.Width - 45)
             {
                 GroupForm groupform = new GroupForm();
@@ -164,6 +183,7 @@ namespace SimpleLineClient
                 if (!string.IsNullOrEmpty(groupform.groupid))
                 {
                     groupinfo.groupid = groupform.groupid;
+                    groupinfo.command = (int)GroupInformation.operation.Join;
                     xml.Serialize(mem, groupinfo);
 
                     byte[] buffer = mem.ToArray();
@@ -174,6 +194,7 @@ namespace SimpleLineClient
                 else
                 {
                     groupinfo.groupname = groupform.groupname;
+                    groupinfo.command = (int)GroupInformation.operation.Create;
                     xml.Serialize(mem, groupinfo);
 
                     byte[] buffer = mem.ToArray();

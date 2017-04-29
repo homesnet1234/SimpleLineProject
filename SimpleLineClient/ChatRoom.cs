@@ -123,5 +123,23 @@ namespace SimpleLineClient
                 unread_message.Clear();
             }
         }
+
+        private void ChatRoom_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Y < 60)
+            {
+                XmlSerializer xml = new XmlSerializer(typeof(GroupInformation));
+                MemoryStream mem = new MemoryStream();
+
+                groupinfo.command = (int)GroupInformation.operation.Leave;
+                groupinfo.user = this.owner;
+
+                xml.Serialize(mem, groupinfo);
+                byte[] buffer = mem.ToArray();
+
+                stream.Write(buffer, 0, buffer.Length);
+                stream.Flush();
+            }
+        }
     }
 }

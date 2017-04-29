@@ -11,6 +11,8 @@ namespace SimpleLineClient
         public User user;
         public string groupname;
         public string groupid;
+        public int command;
+        public enum operation { Create, Join, Leave };
 
         public GroupInformation()
         {
