@@ -11,6 +11,7 @@ namespace SimpleLineProject
         public string message;
         public User from;
         public GroupInformation to;
+        public string time;
 
         public User From
         {
@@ -34,11 +35,12 @@ namespace SimpleLineProject
 
         }
 
-        public Message(User from, GroupInformation to, string message)
+        public Message(User from, GroupInformation to, string message, string time)
         {
             this.from = from;
             this.to = to;
             this.message = message;
+            this.time = time;
         }
     }
 }

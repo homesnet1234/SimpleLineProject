@@ -43,6 +43,11 @@ namespace SimpleLineClient
             }));
         }
 
+        public int GetSizeUnReadMessage()
+        {
+            return unread_message.Count;
+        }
+
         public void AddUnReadMessage(Message message)
         {
             unread_message.Add(message);
@@ -51,7 +56,7 @@ namespace SimpleLineClient
         public void AddReadedMessage(Message message)
         {
             readed_message.Add(message);
-            UpdateUI(message.From.Username + " : " + message.message);
+            UpdateUI(message.From.Username + " : " + message.message + "\t" + message.time);
         }
 
         private void MessageBox_KeyDown(object sender, KeyEventArgs e)
@@ -59,7 +64,8 @@ namespace SimpleLineClient
 
             if (e.KeyCode.Equals(Keys.Enter))
             {
-                Message message = new Message(owner, groupinfo, MessageBox.Text);
+                Message message = new Message(owner, groupinfo, MessageBox.Text, DateTime.Now.TimeOfDay.Hours.ToString("00") 
+                    + ":" + DateTime.Now.TimeOfDay.Minutes.ToString("00"));
                 MemoryStream mem = new MemoryStream();
                 XmlSerializer xml = new XmlSerializer(typeof(Message));
                 xml.Serialize(mem, message);
@@ -71,7 +77,8 @@ namespace SimpleLineClient
 
         private void Send_Click(object sender, EventArgs e)
         {
-            Message message = new Message(owner, groupinfo, MessageBox.Text);
+            Message message = new Message(owner, groupinfo, MessageBox.Text, DateTime.Now.TimeOfDay.Hours.ToString("00") 
+                + ":" + DateTime.Now.TimeOfDay.Minutes.ToString("00"));
             MemoryStream mem = new MemoryStream();
             XmlSerializer xml = new XmlSerializer(typeof(Message));
             xml.Serialize(mem, message);

@@ -23,7 +23,8 @@ namespace SimpleLineProject
         List<User> users;
         List<Group> groups;
         Dictionary<string, NetworkStream> clientUsers;
-        Queue<Tuple<User, Message>> message_buffer; // message for offline user, send when user online
+        Queue<Tuple<User, Message>> message_offine; // message for offline user, send when user online
+        Queue<Tuple<Group, Message>> message_online; // message that send to online user
 
         public Server()
         {
@@ -41,7 +42,8 @@ namespace SimpleLineProject
 
         private void Online_Click(object sender, EventArgs e)
         {
-            message_buffer = new Queue<Tuple<User, Message>>();
+            message_offine = new Queue<Tuple<User, Message>>();
+            message_online = new Queue<Tuple<Group, Message>>();
             users = new List<User>();
             groups = new List<Group>();
             clientUsers = new Dictionary<string, NetworkStream>();
@@ -51,11 +53,52 @@ namespace SimpleLineProject
             Online.Enabled = false;
             Offline.Enabled = true;
 
-            list = new TcpListener(IPAddress.Parse("127.0.0.1"), 8888);
+            list = new TcpListener(IPAddress.Parse("169.254.53.150"), 8888);
             list.Start();
 
-            Thread t1 = new Thread(new ThreadStart(WaitForConnect));
-            t1.Start();
+            Thread connection_thread = new Thread(new ThreadStart(WaitForConnect));
+            connection_thread.Start();
+            Thread message_thread = new Thread(new ThreadStart(MessageManager));
+            message_thread.Start();
+        }
+
+        private void MessageManager()
+        {
+            while (isOnline)
+            {
+                lock (message_online)
+                {
+                    if (message_online.Count <= 0)
+                        continue;
+
+                    Tuple<Group, Message> mo = message_online.Dequeue();
+                    Group group = mo.Item1;
+                    Message message = mo.Item2;
+
+                    for (int i = 0; i < group.GetSizeOfMembers(); i++)
+                    {
+                        User u = group.GetMember(i);
+                        if (u.online)
+                        {
+                            NetworkStream st = clientUsers[u.UserId];
+                            MemoryStream mem = new MemoryStream();
+                            XmlSerializer xml = new XmlSerializer(typeof(Message));
+                            byte[] buffer;
+
+                            mem = new MemoryStream();
+                            xml.Serialize(mem, message);
+                            buffer = mem.ToArray();
+
+                            Thread.Sleep(50);
+                            st.Write(buffer, 0, buffer.Length);
+                            st.Flush();
+                        }
+                        else
+                            message_offine.Enqueue(new Tuple<User, Message>(u, message));
+
+                    }
+                }
+            }
         }
 
         // update status of user and group
@@ -171,11 +214,11 @@ namespace SimpleLineProject
                         }
 
                         xml = new XmlSerializer(typeof(Message));
-                        lock (message_buffer)
+                        lock (message_offine)
                         {
-                            for (int i = 0; i < message_buffer.Count; i++)
+                            for (int i = 0; i < message_offine.Count; i++)
                             {
-                                Tuple<User, Message> m_b = message_buffer.Dequeue();
+                                Tuple<User, Message> m_b = message_offine.Dequeue();
                                 User u = m_b.Item1;
                                 Message m = m_b.Item2;
 
@@ -236,24 +279,7 @@ namespace SimpleLineProject
                         Message message = xml.Deserialize(mem) as Message;
                         Group group = groups[Int32.Parse(message.To.groupid)];
 
-                        for (int i = 0; i < group.GetSizeOfMembers(); i++)
-                        {
-                            User u = group.GetMember(i);
-                            if (u.online)
-                            {
-                                NetworkStream st = clientUsers[u.UserId];
-                                mem = new MemoryStream();
-                                xml.Serialize(mem, message);
-                                buffer = mem.ToArray();
-
-                                Thread.Sleep(50);
-                                st.Write(buffer, 0, buffer.Length);
-                                st.Flush();
-                            }
-                            else
-                                message_buffer.Enqueue(new Tuple<User, Message>(u, message));
-
-                        }
+                        message_online.Enqueue(new Tuple<Group, Message>(group, message));
                     }
                 }
             }

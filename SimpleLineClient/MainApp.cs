@@ -21,11 +21,14 @@ namespace SimpleLineClient
         private User user;
         private NetworkStream stream;
         private List<ChatRoom> rooms;
+        private int chat_startpoint = 60;
 
         public MainApp()
         {
             InitializeComponent();
-            client = new TcpClient("127.0.0.1", 8888);
+            this.MouseWheel += Form1_MouseWheel;
+
+            client = new TcpClient("169.254.53.150", 8888);
             rooms = new List<ChatRoom>();
             stream = client.GetStream();
 
@@ -95,7 +98,10 @@ namespace SimpleLineClient
                             if (r.Visible)
                                 r.AddReadedMessage(message);
                             else
+                            {
                                 r.AddUnReadMessage(message);
+                                Invoke((MethodInvoker)(() => this.Refresh()));
+                            }
                         }
                     }
 
@@ -122,21 +128,30 @@ namespace SimpleLineClient
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
             Graphics g = e.Graphics;
-
-            // TitleBar Color
-            g.FillRectangle(Brushes.SandyBrown, 0, 0, this.Width - this.PreferredSize.Width, 60);
+            Font font = new Font("tahoma", 18);
 
             for (int i = 0; i < rooms.Count; i++)
             {
-                g.DrawRectangle(Pens.RosyBrown, new Rectangle(0, 60 + i * 80, this.Width - this.PreferredSize.Width, 80));
-                g.DrawString(rooms[i].groupinfo.groupname, new Font("tahoma", 20), Brushes.Black,
-                    new RectangleF(0, 60 + 80 * i, this.Width - this.PreferredSize.Width, 80));
+                g.DrawImage(Image.FromFile("./res/img/group_icon_deflaut.png"), 6, 6 + chat_startpoint + 80 * i, 71, 71);
+                g.DrawLine(Pens.LightGray, 90, chat_startpoint + (i + 1) * 80, this.Width - this.PreferredSize.Width, chat_startpoint + (i + 1) * 80);
+                g.DrawString(rooms[i].groupinfo.groupname + " : " + rooms[i].groupinfo.groupid, font, Brushes.Black,
+                    new RectangleF(90, chat_startpoint + 10 + 80 * i, this.Width - this.PreferredSize.Width, 80));
+                if (rooms[i].GetSizeUnReadMessage() > 0)
+                {
+                    g.FillEllipse(Brushes.Red, this.Width - this.PreferredSize.Width - 50, chat_startpoint + 50 + 80 * i, 20, 20);
+                    g.DrawEllipse(Pens.Red, this.Width - this.PreferredSize.Width - 50, chat_startpoint + 50 + 80 * i, 20, 20);
+                }
             }
+
+            // TitleBar Color
+            g.FillRectangle(Brushes.ForestGreen, 0, 0, this.Width - this.PreferredSize.Width, 60);
+            g.DrawImage(Image.FromFile("./res/img/addfriend_icon.png"), this.Width - this.PreferredSize.Width - 45, 12, 40, 40);
+            g.DrawString(user.Username, font, Brushes.White, new RectangleF(20, 15, this.Width - this.PreferredSize.Width - 45, 60));
         }
 
         private void Form1_MouseDown(object sender, MouseEventArgs e)
         {
-            if (e.Y <= 60)
+            if (e.Y <= 60 && e.X >= this.Width - this.PreferredSize.Width - 45)
             {
                 GroupForm groupform = new GroupForm();
                 if (groupform.ShowDialog() != DialogResult.OK)
@@ -167,13 +182,28 @@ namespace SimpleLineClient
                     stream.Flush();
                 }
             }
-            else
+            else if (e.Y > 60)
             {
-                if ((e.Y - 60) / 80 > rooms.Count)
+                if (e.Y > rooms.Count * 80 + 60)
                     return;
-                
-                rooms[(e.Y - 60) / 80].Show();
+
+                rooms[(e.Y - chat_startpoint) / 80].Show();
             }
+
+            this.Refresh();
+        }
+
+        private void Form1_MouseWheel(object sender, MouseEventArgs e)
+        {
+            if (rooms.Count * 80 < this.Height - this.PreferredSize.Height - 60)
+                return;
+
+            if (e.Delta < 0 && chat_startpoint + rooms.Count * 80 >= this.Height - this.PreferredSize.Height)
+                chat_startpoint -= 20;
+            else if (e.Delta > 0 && chat_startpoint < 60)
+                chat_startpoint += 20;
+
+            this.Refresh();
         }
 
         private void MainApp_FormClosing(object sender, FormClosingEventArgs e)
@@ -185,5 +215,6 @@ namespace SimpleLineClient
 
             e.Cancel = false;
         }
+
     }
 }

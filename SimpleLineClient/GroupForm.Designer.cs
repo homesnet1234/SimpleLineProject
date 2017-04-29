@@ -29,16 +29,16 @@
         private void InitializeComponent()
         {
             this.CreatePanel = new System.Windows.Forms.Panel();
-            this.JoinPanel = new System.Windows.Forms.Panel();
-            this.SelectPanel = new System.Windows.Forms.Panel();
-            this.JoinSelect = new System.Windows.Forms.Button();
-            this.CreateSelect = new System.Windows.Forms.Button();
-            this.Join = new System.Windows.Forms.Button();
-            this.Groupid = new System.Windows.Forms.TextBox();
-            this.label2 = new System.Windows.Forms.Label();
             this.Create = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.Groupname = new System.Windows.Forms.TextBox();
+            this.JoinPanel = new System.Windows.Forms.Panel();
+            this.Join = new System.Windows.Forms.Button();
+            this.Groupid = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.SelectPanel = new System.Windows.Forms.Panel();
+            this.JoinSelect = new System.Windows.Forms.Button();
+            this.CreateSelect = new System.Windows.Forms.Button();
             this.CreatePanel.SuspendLayout();
             this.JoinPanel.SuspendLayout();
             this.SelectPanel.SuspendLayout();
@@ -55,6 +55,32 @@
             this.CreatePanel.TabIndex = 0;
             this.CreatePanel.Visible = false;
             // 
+            // Create
+            // 
+            this.Create.Location = new System.Drawing.Point(167, 42);
+            this.Create.Name = "Create";
+            this.Create.Size = new System.Drawing.Size(75, 23);
+            this.Create.TabIndex = 2;
+            this.Create.Text = "Create";
+            this.Create.UseVisualStyleBackColor = true;
+            this.Create.Click += new System.EventHandler(this.Create_Click);
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(13, 19);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(71, 13);
+            this.label1.TabIndex = 1;
+            this.label1.Text = "Groupname : ";
+            // 
+            // Groupname
+            // 
+            this.Groupname.Location = new System.Drawing.Point(90, 16);
+            this.Groupname.Name = "Groupname";
+            this.Groupname.Size = new System.Drawing.Size(152, 20);
+            this.Groupname.TabIndex = 0;
+            // 
             // JoinPanel
             // 
             this.JoinPanel.Controls.Add(this.Join);
@@ -65,6 +91,32 @@
             this.JoinPanel.Size = new System.Drawing.Size(260, 88);
             this.JoinPanel.TabIndex = 1;
             this.JoinPanel.Visible = false;
+            // 
+            // Join
+            // 
+            this.Join.Location = new System.Drawing.Point(167, 43);
+            this.Join.Name = "Join";
+            this.Join.Size = new System.Drawing.Size(75, 23);
+            this.Join.TabIndex = 2;
+            this.Join.Text = "Join";
+            this.Join.UseVisualStyleBackColor = true;
+            this.Join.Click += new System.EventHandler(this.Join_Click);
+            // 
+            // Groupid
+            // 
+            this.Groupid.Location = new System.Drawing.Point(90, 17);
+            this.Groupid.Name = "Groupid";
+            this.Groupid.Size = new System.Drawing.Size(152, 20);
+            this.Groupid.TabIndex = 1;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(13, 20);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(53, 13);
+            this.label2.TabIndex = 0;
+            this.label2.Text = "Groupid : ";
             // 
             // SelectPanel
             // 
@@ -95,58 +147,6 @@
             this.CreateSelect.UseVisualStyleBackColor = true;
             this.CreateSelect.Click += new System.EventHandler(this.CreateSelect_Click);
             // 
-            // Join
-            // 
-            this.Join.Location = new System.Drawing.Point(167, 43);
-            this.Join.Name = "Join";
-            this.Join.Size = new System.Drawing.Size(75, 23);
-            this.Join.TabIndex = 2;
-            this.Join.Text = "Join";
-            this.Join.UseVisualStyleBackColor = true;
-            this.Join.Click += new System.EventHandler(this.Join_Click);
-            // 
-            // Groupid
-            // 
-            this.Groupid.Location = new System.Drawing.Point(90, 17);
-            this.Groupid.Name = "Groupid";
-            this.Groupid.Size = new System.Drawing.Size(152, 20);
-            this.Groupid.TabIndex = 1;
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(13, 20);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(53, 13);
-            this.label2.TabIndex = 0;
-            this.label2.Text = "Groupid : ";
-            // 
-            // Create
-            // 
-            this.Create.Location = new System.Drawing.Point(167, 42);
-            this.Create.Name = "Create";
-            this.Create.Size = new System.Drawing.Size(75, 23);
-            this.Create.TabIndex = 2;
-            this.Create.Text = "Create";
-            this.Create.UseVisualStyleBackColor = true;
-            this.Create.Click += new System.EventHandler(this.Create_Click);
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(13, 19);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(71, 13);
-            this.label1.TabIndex = 1;
-            this.label1.Text = "Groupname : ";
-            // 
-            // Groupname
-            // 
-            this.Groupname.Location = new System.Drawing.Point(90, 16);
-            this.Groupname.Name = "Groupname";
-            this.Groupname.Size = new System.Drawing.Size(152, 20);
-            this.Groupname.TabIndex = 0;
-            // 
             // GroupForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -155,6 +155,7 @@
             this.Controls.Add(this.SelectPanel);
             this.Controls.Add(this.CreatePanel);
             this.Controls.Add(this.JoinPanel);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "GroupForm";
             this.Text = "GroupForm";
             this.CreatePanel.ResumeLayout(false);
