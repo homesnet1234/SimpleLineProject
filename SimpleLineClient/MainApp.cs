@@ -138,8 +138,8 @@ namespace SimpleLineClient
                     new RectangleF(90, chat_startpoint + 10 + 80 * i, this.Width - this.PreferredSize.Width, 80));
                 if (rooms[i].GetSizeUnReadMessage() > 0)
                 {
-                    g.FillEllipse(Brushes.Red, this.Width - this.PreferredSize.Width - 50, chat_startpoint + 50 + 80 * i, 20, 20);
-                    g.DrawEllipse(Pens.Red, this.Width - this.PreferredSize.Width - 50, chat_startpoint + 50 + 80 * i, 20, 20);
+                    g.DrawString(rooms[i].GetSizeUnReadMessage() + "", font, Brushes.DarkRed, 
+                        new PointF(this.Width - this.PreferredSize.Width - 50, chat_startpoint + 50 + 80 * i));
                 }
             }
 
