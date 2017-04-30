@@ -26,6 +26,8 @@ namespace SimpleLineProject
         Dictionary<string, NetworkStream> clientUsers;
         Queue<Tuple<User, Message>> message_offine; // message for offline user, send when user online
         Queue<Tuple<Group, Message>> message_online; // message that send to online user
+        private string ip = "127.0.0.1";
+        private int port = 8888;
 
         public Server()
         {
@@ -56,7 +58,7 @@ namespace SimpleLineProject
             Online.Enabled = false;
             Offline.Enabled = true;
 
-            list = new TcpListener(IPAddress.Parse("127.0.0.1"), 8888);
+            list = new TcpListener(IPAddress.Parse(ip), port);
             list.Start();
 
             Thread connection_thread = new Thread(new ThreadStart(WaitForConnect));

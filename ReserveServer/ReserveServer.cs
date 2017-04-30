@@ -25,6 +25,9 @@ namespace ReserveServer
         Dictionary<string, NetworkStream> clientUsers;
         Queue<Tuple<User, Message>> message_offine; // message for offline user, send when user online
         Queue<Tuple<Group, Message>> message_online; // message that send to online user
+        private string ip1 = "127.0.0.1";
+        private string ip2 = "127.0.0.2";
+        private int port = 8888;
 
         public ReserveServer()
         {
@@ -43,7 +46,7 @@ namespace ReserveServer
 
         private void ReserveMainServer()
         {
-            TcpClient client = new TcpClient("127.0.0.1", 8888);
+            TcpClient client = new TcpClient(ip1, port);
             NetworkStream stream = client.GetStream();
             XmlSerializer xml;
             MemoryStream mem;
@@ -178,7 +181,7 @@ namespace ReserveServer
 
             isOnline = true;
 
-            list = new TcpListener(IPAddress.Parse("127.0.0.2"), 8888);
+            list = new TcpListener(IPAddress.Parse(ip2), port);
             list.Start();
 
             Thread connection_thread = new Thread(new ThreadStart(WaitForConnect));
@@ -199,15 +202,6 @@ namespace ReserveServer
                 if (isOnline)
                 {
                     OnlineList.AppendText("Reserve Server Online");
-                    OnlineList.AppendText("\n");
-                }
-
-                OnlineList.AppendText("Offine Message");
-                OnlineList.AppendText("\n");
-
-                foreach (Tuple<User, Message> t in message_offine)
-                {
-                    OnlineList.AppendText(t.Item1.Username + " : " + t.Item2.message);
                     OnlineList.AppendText("\n");
                 }
 
@@ -396,7 +390,7 @@ namespace ReserveServer
                         else if (groupinfo.command == (int)GroupInformation.operation.Join)
                         {
                             groupinfo.groupname = groups[Int32.Parse(groupinfo.groupid)].groupname;
-                            groupinfo.groupid = string.Format("00000", groupinfo.groupid);
+                            groupinfo.groupid = Int32.Parse(groupinfo.groupid).ToString("00000");
 
                             users[Int32.Parse(groupinfo.user.UserId)].groupinfoes.Add(groupinfo);
                             groups[Int32.Parse(groupinfo.groupid)].AddMember(users[Int32.Parse(groupinfo.user.UserId)]);

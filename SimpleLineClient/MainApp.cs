@@ -36,6 +36,11 @@ namespace SimpleLineClient
             Form startForm = new StartForm();
             startForm.ShowDialog();
 
+            if (!startForm.DialogResult.Equals(DialogResult.OK))
+            {
+                Environment.Exit(0);
+            }
+
             if (!string.IsNullOrEmpty(StartForm.userid))
                 user.UserId = StartForm.userid;
             else
@@ -152,9 +157,16 @@ namespace SimpleLineClient
                 }
             }
 
-            client = new TcpClient(ip2, port);
+            do
+            {
+                client = new TcpClient(ip2, port);
+                Thread.Sleep(50);
+            } while (client == null);
+
             stream = client.GetStream();
-            rooms.Clear();
+
+            if (!string.IsNullOrEmpty(user.UserId))
+                user.Username = "";
 
             xml = new XmlSerializer(typeof(User));
             mem = new MemoryStream();
@@ -237,7 +249,18 @@ namespace SimpleLineClient
                     }
                     else
                     {   // Create ChatRoom
-                        if (rooms.IndexOf(room) == -1)
+                        bool chk = true;
+                        foreach (ChatRoom r in rooms)
+                        {
+                            if (r.groupinfo.groupid == room.groupinfo.groupid)
+                            {
+                                r.owner = user;
+                                r.Stream = stream;
+                                chk = false;
+                                break;
+                            }
+                        }
+                        if (chk)
                             rooms.Add(room);
                     }
 
@@ -338,8 +361,11 @@ namespace SimpleLineClient
         {
             e.Cancel = true;
 
-            stream.Close();
-            client.Close();
+            if (client != null)
+            {
+                stream.Close();
+                client.Close();
+            }
 
             e.Cancel = false;
         }

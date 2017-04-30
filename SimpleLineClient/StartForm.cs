@@ -35,12 +35,14 @@ namespace SimpleLineClient
         private void Login_Click(object sender, EventArgs e)
         {
             StartForm.userid = UserID.Text;
+            this.DialogResult = DialogResult.OK;
             this.Dispose();
         }
 
         private void Register_Click(object sender, EventArgs e)
         {
             StartForm.username = Username.Text;
+            this.DialogResult = DialogResult.OK;
             this.Dispose();
         }
     }

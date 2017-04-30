@@ -17,7 +17,7 @@ namespace SimpleLineClient
     {
         public GroupInformation groupinfo;
         private NetworkStream stream;
-        private User owner;
+        public User owner;
         private List<Message> readed_message;
         private List<Message> unread_message;
 
