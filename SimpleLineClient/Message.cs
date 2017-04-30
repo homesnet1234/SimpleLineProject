@@ -12,6 +12,7 @@ namespace SimpleLineClient
         public User from;
         public GroupInformation to;
         public string time;
+        public bool delete;
 
         public User From
         {

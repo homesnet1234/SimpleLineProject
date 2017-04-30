@@ -14,12 +14,11 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
 
-namespace SimpleLineProject
+namespace ReserveServer
 {
-    public partial class Server : Form
+    public partial class ReserveServer : Form
     {
         TcpListener list;
-        NetworkStream reserve;
         bool isOnline;
         List<User> users;
         List<Group> groups;
@@ -27,36 +26,159 @@ namespace SimpleLineProject
         Queue<Tuple<User, Message>> message_offine; // message for offline user, send when user online
         Queue<Tuple<Group, Message>> message_online; // message that send to online user
 
-        public Server()
+        public ReserveServer()
         {
             InitializeComponent();
-        }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-
-            isOnline = false;
-            if (list != null)
-                list.Stop();
-            Online.Enabled = true;
-            Offline.Enabled = false;
-
-            list.Stop();
-        }
-
-        private void Online_Click(object sender, EventArgs e)
-        {
             message_offine = new Queue<Tuple<User, Message>>();
             message_online = new Queue<Tuple<Group, Message>>();
             users = new List<User>();
             groups = new List<Group>();
             clientUsers = new Dictionary<string, NetworkStream>();
 
-            isOnline = true;
-            Online.Enabled = false;
-            Offline.Enabled = true;
+            Thread t1 = new Thread(new ThreadStart(ReserveMainServer));
+            t1.IsBackground = true;
+            t1.Start();
+        }
 
-            list = new TcpListener(IPAddress.Parse("127.0.0.1"), 8888);
+        private void ReserveMainServer()
+        {
+            TcpClient client = new TcpClient("127.0.0.1", 8888);
+            NetworkStream stream = client.GetStream();
+            XmlSerializer xml;
+            MemoryStream mem;
+            byte[] buffer;
+            User user = null;
+
+            mem = new MemoryStream();
+            xml = new XmlSerializer(typeof(string));
+            xml.Serialize(mem, "reserve");
+
+            buffer = mem.ToArray();
+            stream.Write(buffer, 0, buffer.Length);
+            stream.Flush();
+
+            try
+            {
+                while (stream.CanRead)
+                {
+                    buffer = new byte[1000000];
+                    stream.Read(buffer, 0, buffer.Length);
+                    mem = new MemoryStream(buffer);
+                    XmlReader reader = XmlReader.Create(new MemoryStream(buffer));
+
+
+                    //User
+                    xml = new XmlSerializer(typeof(User));
+                    if (xml.CanDeserialize(reader))
+                    {
+                        user = xml.Deserialize(mem) as User;
+
+                        if (string.IsNullOrEmpty(user.UserId))
+                        {
+                            user.UserId = users.Count.ToString("00000");
+                            users.Add(user);
+                            UpdateUI();
+                        }
+                        else
+                        {
+                            user = users[Int32.Parse(user.UserId)];
+                            users[Int32.Parse(user.UserId)].online = false;
+                            UpdateUI();
+                        }
+                    }
+
+                    // GroupInformation
+                    xml = new XmlSerializer(typeof(GroupInformation));
+                    if (xml.CanDeserialize(reader))
+                    {
+                        GroupInformation groupinfo = xml.Deserialize(mem) as GroupInformation;
+
+                        if (groupinfo.command == (int)GroupInformation.operation.Create)
+                        {
+                            groupinfo.groupid = groups.Count.ToString("00000");
+                            Group group = new Group();
+                            group.groupid = groupinfo.groupid;
+                            group.groupname = groupinfo.groupname;
+                            groups.Add(group);
+
+                            users[Int32.Parse(groupinfo.user.UserId)].groupinfoes.Add(groupinfo);
+                            groups[Int32.Parse(groupinfo.groupid)].AddMember(users[Int32.Parse(groupinfo.user.UserId)]);
+                        }
+                        else if (groupinfo.command == (int)GroupInformation.operation.Join)
+                        {
+                            groupinfo.groupname = groups[Int32.Parse(groupinfo.groupid)].groupname;
+                            groupinfo.groupid = Int32.Parse(groupinfo.groupid).ToString("00000");
+
+                            users[Int32.Parse(groupinfo.user.UserId)].groupinfoes.Add(groupinfo);
+                            groups[Int32.Parse(groupinfo.groupid)].AddMember(users[Int32.Parse(groupinfo.user.UserId)]);
+                        }
+                        else if (groupinfo.command == (int)GroupInformation.operation.Leave)
+                        {
+                            groups[Int32.Parse(groupinfo.groupid)].RemoveMember(user);
+                            foreach (GroupInformation g in users[Int32.Parse(groupinfo.user.UserId)].groupinfoes)
+                            {
+                                if (g.groupid == groupinfo.groupid)
+                                {
+                                    lock (users)
+                                    {
+                                        users[Int32.Parse(groupinfo.user.UserId)].groupinfoes.Remove(g);
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+
+                        UpdateUI();
+                    }
+
+                    // Message
+                    xml = new XmlSerializer(typeof(Message));
+                    if (xml.CanDeserialize(reader))
+                    {
+                        Message message = xml.Deserialize(mem) as Message;
+                        
+                        buffer = new byte[1000000];
+                        stream.Read(buffer, 0, buffer.Length);
+                        xml = new XmlSerializer(typeof(User));
+                        mem = new MemoryStream(buffer);
+
+                        User us = xml.Deserialize(mem) as User;
+
+                        if (message.delete)
+                        {
+                            message.delete = false;
+                            lock (message_offine)
+                            {
+                                for (int i = 0; i < message_offine.Count; i++)
+                                {
+                                    Tuple<User, Message> m_b = message_offine.Dequeue();
+                                    User u = m_b.Item1;
+                                    Message m = m_b.Item2;
+
+                                    if (us.UserId != u.UserId)
+                                    {
+                                        message_offine.Enqueue(m_b);
+                                    }
+                                }
+                            }
+                        }
+                        else
+                            message_offine.Enqueue(new Tuple<User, Message>(us, message));
+
+                        UpdateUI();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                stream.Close();
+                client.Close();
+            }
+
+            isOnline = true;
+
+            list = new TcpListener(IPAddress.Parse("127.0.0.2"), 8888);
             list.Start();
 
             Thread connection_thread = new Thread(new ThreadStart(WaitForConnect));
@@ -67,79 +189,27 @@ namespace SimpleLineProject
             UpdateUI();
         }
 
-        private void MessageManager()
-        {
-            while (isOnline)
-            {
-                lock (message_online)
-                {
-                    if (message_online.Count <= 0)
-                        continue;
-
-                    Tuple<Group, Message> mo = message_online.Dequeue();
-                    Group group = mo.Item1;
-                    Message message = mo.Item2;
-
-                    for (int i = 0; i < group.GetSizeOfMembers(); i++)
-                    {
-                        User u = group.GetMember(i);
-                        MemoryStream mem = new MemoryStream();
-                        XmlSerializer xml = new XmlSerializer(typeof(Message));
-                        byte[] buffer;
-
-                        if (u.online)
-                        {
-                            NetworkStream st = clientUsers[u.UserId];
-
-                            mem = new MemoryStream();
-                            xml.Serialize(mem, message);
-                            buffer = mem.ToArray();
-
-                            Thread.Sleep(50);
-                            st.Write(buffer, 0, buffer.Length);
-                            st.Flush();
-                        }
-                        else
-                        {
-                            message_offine.Enqueue(new Tuple<User, Message>(u, message));
-
-                            if (reserve == null)
-                                continue;
-
-                            mem = new MemoryStream();
-                            xml.Serialize(mem, message);
-                            buffer = mem.ToArray();
-
-                            Thread.Sleep(50);
-                            reserve.Write(buffer, 0, buffer.Length);
-                            reserve.Flush();
-
-                            xml = new XmlSerializer(typeof(User));
-                            mem = new MemoryStream();
-                            xml.Serialize(mem, u);
-                            buffer = mem.ToArray();
-
-                            reserve.Write(buffer, 0, buffer.Length);
-                            reserve.Flush();
-                        }
-
-                    }
-                }
-            }
-        }
-
         // update status of user and group
         private void UpdateUI()
         {
             Invoke((MethodInvoker)delegate
             {
-                if (!isOnline)
-                    return;
-
                 OnlineList.Clear();
 
-                OnlineList.AppendText("ReserveServer : " + (reserve != null && reserve.CanWrite ? "Online" : "Offline"));
+                if (isOnline)
+                {
+                    OnlineList.AppendText("Reserve Server Online");
+                    OnlineList.AppendText("\n");
+                }
+
+                OnlineList.AppendText("Offine Message");
                 OnlineList.AppendText("\n");
+
+                foreach (Tuple<User, Message> t in message_offine)
+                {
+                    OnlineList.AppendText(t.Item1.Username + " : " + t.Item2.message);
+                    OnlineList.AppendText("\n");
+                }
 
                 foreach (User u in users)
                 {
@@ -163,7 +233,45 @@ namespace SimpleLineProject
             });
         }
 
-        // wait use connect to server
+        private void MessageManager()
+        {
+            while (isOnline)
+            {
+                lock (message_online)
+                {
+                    if (message_online.Count <= 0)
+                        continue;
+
+                    Tuple<Group, Message> mo = message_online.Dequeue();
+                    Group group = mo.Item1;
+                    Message message = mo.Item2;
+
+                    for (int i = 0; i < group.GetSizeOfMembers(); i++)
+                    {
+                        User u = group.GetMember(i);
+                        if (u.online)
+                        {
+                            NetworkStream st = clientUsers[u.UserId];
+                            MemoryStream mem = new MemoryStream();
+                            XmlSerializer xml = new XmlSerializer(typeof(Message));
+                            byte[] buffer;
+
+                            mem = new MemoryStream();
+                            xml.Serialize(mem, message);
+                            buffer = mem.ToArray();
+
+                            Thread.Sleep(50);
+                            st.Write(buffer, 0, buffer.Length);
+                            st.Flush();
+                        }
+                        else
+                            message_offine.Enqueue(new Tuple<User, Message>(u, message));
+
+                    }
+                }
+            }
+        }
+
         private void WaitForConnect()
         {
             while (isOnline)
@@ -185,7 +293,6 @@ namespace SimpleLineProject
             }
         }
 
-        // manage each user that online
         private void ClientManage(object obj)
         {
             TcpClient client = obj as TcpClient;
@@ -203,33 +310,11 @@ namespace SimpleLineProject
                     MemoryStream mem = new MemoryStream(buffer);
                     XmlReader reader = XmlReader.Create(new MemoryStream(buffer));
 
-                    // For ReserveServer
-                    xml = new XmlSerializer(typeof(string));
-                    if (xml.CanDeserialize(reader))
-                    {
-                        string a = xml.Deserialize(mem) as string;
-
-                        if (a == "reserve")
-                        {
-                            reserve = stream;
-                            UpdateUI();
-                        }
-                    }
-
                     // User
                     xml = new XmlSerializer(typeof(User));
                     if (xml.CanDeserialize(reader))
                     {
                         user = xml.Deserialize(mem) as User;
-
-                        if (reserve != null)
-                        {
-                            lock (reserve)
-                            {
-                                reserve.Write(buffer, 0, buffer.Length);
-                                reserve.Flush();
-                            }
-                        }
 
                         if (string.IsNullOrEmpty(user.UserId))
                         {
@@ -265,7 +350,7 @@ namespace SimpleLineProject
                             stream.Flush();
                         }
 
-                        
+                        xml = new XmlSerializer(typeof(Message));
                         lock (message_offine)
                         {
                             int loops = message_offine.Count;
@@ -274,7 +359,6 @@ namespace SimpleLineProject
                                 Tuple<User, Message> m_b = message_offine.Dequeue();
                                 User u = m_b.Item1;
                                 Message m = m_b.Item2;
-                                xml = new XmlSerializer(typeof(Message));
 
                                 if (user.Equals(u))
                                 {
@@ -285,29 +369,7 @@ namespace SimpleLineProject
                                     Thread.Sleep(50);
                                     stream.Write(buffer, 0, buffer.Length);
                                     stream.Flush();
-
-                                    // Call Reserve Server to Delete Message
-                                    if (reserve == null)
-                                        continue;
-
-                                    m.delete = true;
-                                    mem = new MemoryStream();
-                                    xml.Serialize(mem, m);
-                                    buffer = mem.ToArray();
-
-                                    reserve.Write(buffer, 0, buffer.Length);
-                                    reserve.Flush();
-
-                                    xml = new XmlSerializer(typeof(User));
-                                    mem = new MemoryStream();
-                                    xml.Serialize(mem, u);
-                                    buffer = mem.ToArray();
-
-                                    reserve.Write(buffer, 0, buffer.Length);
-                                    reserve.Flush();
                                 }
-                                else
-                                    message_offine.Enqueue(m_b);
                             }
                         }
 
@@ -319,15 +381,6 @@ namespace SimpleLineProject
                     if (xml.CanDeserialize(reader))
                     {
                         GroupInformation groupinfo = xml.Deserialize(mem) as GroupInformation;
-
-                        if (reserve != null)
-                        {
-                            lock (reserve)
-                            {
-                                reserve.Write(buffer, 0, buffer.Length);
-                                reserve.Flush();
-                            }
-                        }
 
                         if (groupinfo.command == (int)GroupInformation.operation.Create)
                         {
@@ -343,7 +396,7 @@ namespace SimpleLineProject
                         else if (groupinfo.command == (int)GroupInformation.operation.Join)
                         {
                             groupinfo.groupname = groups[Int32.Parse(groupinfo.groupid)].groupname;
-                            groupinfo.groupid = Int32.Parse(groupinfo.groupid).ToString("00000");
+                            groupinfo.groupid = string.Format("00000", groupinfo.groupid);
 
                             users[Int32.Parse(groupinfo.user.UserId)].groupinfoes.Add(groupinfo);
                             groups[Int32.Parse(groupinfo.groupid)].AddMember(users[Int32.Parse(groupinfo.user.UserId)]);
@@ -387,31 +440,25 @@ namespace SimpleLineProject
                     }
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                if (user != null)
-                {
-                    clientUsers.Remove(user.UserId);
-                    users[Int32.Parse(user.UserId)].online = false;
-                }
+                clientUsers.Remove(user.UserId);
+                users[Int32.Parse(user.UserId)].online = false;
                 stream.Close();
                 client.Close();
                 UpdateUI();
             }
             finally
             {
-                if (user != null)
-                {
-                    clientUsers.Remove(user.UserId);
-                    users[Int32.Parse(user.UserId)].online = false;
-                }
+                clientUsers.Remove(user.UserId);
+                users[Int32.Parse(user.UserId)].online = false;
                 stream.Close();
                 client.Close();
                 UpdateUI();
             }
         }
 
-        private void Server_FormClosing(object sender, FormClosingEventArgs e)
+        private void ReserveServer_FormClosing(object sender, FormClosingEventArgs e)
         {
             e.Cancel = true;
 

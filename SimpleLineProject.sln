@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.10
+VisualStudioVersion = 15.0.26403.7
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleLineProject", "SimpleLineProject\SimpleLineProject.csproj", "{55555319-265A-4331-9A51-3D89985AD68E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleLineClient", "SimpleLineClient\SimpleLineClient.csproj", "{7C014594-45FF-41E0-9D71-7AB3FDB1587B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReserveServer", "ReserveServer\ReserveServer.csproj", "{C557E7CD-9CC3-4332-AA8A-F0C20EE1BFC9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{7C014594-45FF-41E0-9D71-7AB3FDB1587B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7C014594-45FF-41E0-9D71-7AB3FDB1587B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7C014594-45FF-41E0-9D71-7AB3FDB1587B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C557E7CD-9CC3-4332-AA8A-F0C20EE1BFC9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C557E7CD-9CC3-4332-AA8A-F0C20EE1BFC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C557E7CD-9CC3-4332-AA8A-F0C20EE1BFC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C557E7CD-9CC3-4332-AA8A-F0C20EE1BFC9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

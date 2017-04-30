@@ -21,6 +21,15 @@ namespace SimpleLineClient
         private List<Message> readed_message;
         private List<Message> unread_message;
 
+        public NetworkStream Stream
+        {
+            set
+            {
+                if (value != null)
+                    this.stream = value;
+            }
+        }
+
         public ChatRoom(User owner, GroupInformation group, NetworkStream stream)
         {
             InitializeComponent();

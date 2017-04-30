@@ -22,36 +22,46 @@ namespace SimpleLineClient
         private NetworkStream stream;
         private List<ChatRoom> rooms;
         private int chat_startpoint = 60;
+        private string ip1 = "127.0.0.1";
+        private string ip2 = "127.0.0.2";
+        private int port = 8888;
 
         public MainApp()
         {
             InitializeComponent();
             this.MouseWheel += Form1_MouseWheel;
-
-            client = new TcpClient("169.254.53.150", 8888);
             rooms = new List<ChatRoom>();
-            stream = client.GetStream();
+            user = new User();
 
             Form startForm = new StartForm();
             startForm.ShowDialog();
-
-            user = new User();
 
             if (!string.IsNullOrEmpty(StartForm.userid))
                 user.UserId = StartForm.userid;
             else
                 user.Username = StartForm.username;
 
-            XmlSerializer xml = new XmlSerializer(typeof(User));
-            MemoryStream mem = new MemoryStream();
+            try
+            {
+                client = new TcpClient(ip1, port);
+                stream = client.GetStream();
 
-            xml.Serialize(mem, user);
-            byte[] buffer = mem.ToArray();
+                XmlSerializer xml = new XmlSerializer(typeof(User));
+                MemoryStream mem = new MemoryStream();
 
-            stream.Write(buffer, 0, buffer.Length);
-            stream.Flush();
+                xml.Serialize(mem, user);
+                byte[] buffer = mem.ToArray();
+
+                stream.Write(buffer, 0, buffer.Length);
+                stream.Flush();
+            }
+            catch (Exception)
+            {
+                client = null;
+            }
 
             Thread networkthread = new Thread(NetworkManager);
+            networkthread.IsBackground = true;
             networkthread.Start();
         }
 
@@ -59,10 +69,12 @@ namespace SimpleLineClient
         {
             XmlSerializer xml;
             MemoryStream mem;
+            byte[] buffer;
 
-            while (stream.CanRead)
+            // MainServer
+            while (client != null && stream.CanRead)
             {
-                byte[] buffer = new byte[1000000];
+                buffer = new byte[1000000];
                 try
                 {
                     stream.Read(buffer, 0, buffer.Length);
@@ -82,7 +94,7 @@ namespace SimpleLineClient
                     User user = xml.Deserialize(mem) as User;
                     this.user = user;
 
-                    this.Refresh();
+                    Invoke((MethodInvoker)(() => this.Refresh()));
 
                     continue;
                 }
@@ -139,6 +151,101 @@ namespace SimpleLineClient
                     continue;
                 }
             }
+
+            client = new TcpClient(ip2, port);
+            stream = client.GetStream();
+            rooms.Clear();
+
+            xml = new XmlSerializer(typeof(User));
+            mem = new MemoryStream();
+            xml.Serialize(mem, user);
+
+            buffer = mem.ToArray();
+
+            stream.Write(buffer, 0, buffer.Length);
+            stream.Flush();
+
+            // Reserve Server
+            while (stream.CanRead)
+            {
+                buffer = new byte[1000000];
+                try
+                {
+                    stream.Read(buffer, 0, buffer.Length);
+                }
+                catch (Exception)
+                {
+                    break;
+                }
+
+                mem = new MemoryStream(buffer);
+                XmlReader reader = XmlReader.Create(new MemoryStream(buffer));
+
+                // User
+                xml = new XmlSerializer(typeof(User));
+                if (xml.CanDeserialize(reader))
+                {
+                    User user = xml.Deserialize(mem) as User;
+                    this.user = user;
+
+                    Invoke((MethodInvoker)(() => this.Refresh()));
+
+                    continue;
+                }
+
+                // Message
+                xml = new XmlSerializer(typeof(Message));
+                if (xml.CanDeserialize(reader))
+                {
+                    Message message = xml.Deserialize(mem) as Message;
+
+                    foreach (ChatRoom r in rooms)
+                    {
+                        if (r.groupinfo.groupid == message.To.groupid)
+                        {
+                            if (r.Visible)
+                                r.AddReadedMessage(message);
+                            else
+                            {
+                                r.AddUnReadMessage(message);
+                                Invoke((MethodInvoker)(() => this.Refresh()));
+                            }
+                        }
+                    }
+
+                    continue;
+                }
+
+                // GroupInfomation
+                xml = new XmlSerializer(typeof(GroupInformation));
+                if (xml.CanDeserialize(reader))
+                {
+                    GroupInformation groupinfo = xml.Deserialize(mem) as GroupInformation;
+                    ChatRoom room = new ChatRoom(user, groupinfo, stream);
+
+                    if (groupinfo.command == (int)GroupInformation.operation.Leave)
+                    {   // Remove ChatRoom
+                        foreach (ChatRoom r in rooms)
+                        {
+                            if (r.groupinfo.groupid == groupinfo.groupid)
+                            {
+                                Invoke((MethodInvoker)(() => r.Dispose()));
+                                rooms.Remove(r);
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {   // Create ChatRoom
+                        if (rooms.IndexOf(room) == -1)
+                            rooms.Add(room);
+                    }
+
+                    Invoke((MethodInvoker)(() => this.Refresh()));
+
+                    continue;
+                }
+            }
         }
 
         private void Form1_Paint(object sender, PaintEventArgs e)
@@ -154,7 +261,7 @@ namespace SimpleLineClient
                     new RectangleF(90, chat_startpoint + 10 + 80 * i, this.Width - this.PreferredSize.Width, 80));
                 if (rooms[i].GetSizeUnReadMessage() > 0)
                 {
-                    g.DrawString(rooms[i].GetSizeUnReadMessage() + "", font, Brushes.DarkRed, 
+                    g.DrawString(rooms[i].GetSizeUnReadMessage() + "", font, Brushes.DarkRed,
                         new PointF(this.Width - this.PreferredSize.Width - 50, chat_startpoint + 50 + 80 * i));
                 }
             }
