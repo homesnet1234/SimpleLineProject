@@ -65,7 +65,8 @@ namespace SimpleLineClient
         public void AddReadedMessage(Message message)
         {
             readed_message.Add(message);
-            UpdateUI(message.From.Username + " : " + message.message + "\t" + message.time);
+            UpdateUI(message.From.Username + "(" + message.From.UserId + ") : " + message.message + "\n\t\t\t" 
+                + DateTime.Now.TimeOfDay.Hours.ToString("00") + ":" + DateTime.Now.TimeOfDay.Minutes.ToString("00"));
         }
 
         private void MessageBox_KeyDown(object sender, KeyEventArgs e)
@@ -73,7 +74,7 @@ namespace SimpleLineClient
 
             if (e.KeyCode.Equals(Keys.Enter))
             {
-                Message message = new Message(owner, groupinfo, MessageBox.Text, DateTime.Now.TimeOfDay.Hours.ToString("00") 
+                Message message = new Message(owner, groupinfo, ChatMessage.Text, DateTime.Now.TimeOfDay.Hours.ToString("00") 
                     + ":" + DateTime.Now.TimeOfDay.Minutes.ToString("00"));
                 MemoryStream mem = new MemoryStream();
                 XmlSerializer xml = new XmlSerializer(typeof(Message));
@@ -86,7 +87,7 @@ namespace SimpleLineClient
 
         private void Send_Click(object sender, EventArgs e)
         {
-            Message message = new Message(owner, groupinfo, MessageBox.Text, DateTime.Now.TimeOfDay.Hours.ToString("00") 
+            Message message = new Message(owner, groupinfo, ChatMessage.Text, DateTime.Now.TimeOfDay.Hours.ToString("00") 
                 + ":" + DateTime.Now.TimeOfDay.Minutes.ToString("00"));
             MemoryStream mem = new MemoryStream();
             XmlSerializer xml = new XmlSerializer(typeof(Message));
@@ -94,14 +95,14 @@ namespace SimpleLineClient
             byte[] buffer = mem.ToArray();
             stream.Write(buffer, 0, buffer.Length);
             stream.Flush();
-            MessageBox.Text = "";
+            ChatMessage.Text = "";
         }
 
         private void MessageBox_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.KeyCode.Equals(Keys.Enter))
             {
-                MessageBox.Text = "";
+                ChatMessage.Text = "";
             }
         }
 
@@ -119,7 +120,8 @@ namespace SimpleLineClient
 
                 foreach (Message m in readed_message)
                 {
-                    UpdateUI(m.From.Username + " : " + m.message);
+                    UpdateUI(m.From.Username + "(" + m.From.UserId + ") : " + m.message + "\n\t\t\t" 
+                        + DateTime.Now.TimeOfDay.Hours.ToString("00") + ":" + DateTime.Now.TimeOfDay.Minutes.ToString("00"));
                 }
 
                 if (unread_message.Count > 0)
@@ -135,8 +137,11 @@ namespace SimpleLineClient
 
         private void ChatRoom_MouseDown(object sender, MouseEventArgs e)
         {
-            if (e.Y < 60)
+            if (e.Y < 60 && e.X >= this.Width - 66)
             {
+                if (MessageBox.Show("You want to leave group?", "LeaveGroup", MessageBoxButtons.YesNo) == DialogResult.No)
+                    return;
+
                 XmlSerializer xml = new XmlSerializer(typeof(GroupInformation));
                 MemoryStream mem = new MemoryStream();
 
@@ -149,6 +154,19 @@ namespace SimpleLineClient
                 stream.Write(buffer, 0, buffer.Length);
                 stream.Flush();
             }
+        }
+
+        private void ChatRoom_Paint(object sender, PaintEventArgs e)
+        {
+            Graphics g = e.Graphics;
+            int constant = -16;
+            Font font_title = new Font("comic sans ms", 20);
+
+            // Titlebar
+            g.FillRectangle(Brushes.ForestGreen, 0, 0, this.Width + constant, 60);
+            g.DrawImage(Image.FromFile("./res/img/leavegroup_icon.png"), this.Width + constant - 50, 8, 45, 45);
+            g.DrawString(groupinfo.groupname + " (ID : " + groupinfo.groupid + ")", font_title, Brushes.White, 
+                new RectangleF(20, 10, this.Width + constant - 50, 60));
         }
     }
 }

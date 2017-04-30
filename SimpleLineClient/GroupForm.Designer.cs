@@ -157,6 +157,7 @@
             this.Controls.Add(this.JoinPanel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "GroupForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "GroupForm";
             this.CreatePanel.ResumeLayout(false);
             this.CreatePanel.PerformLayout();

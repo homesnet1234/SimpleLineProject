@@ -37,8 +37,8 @@
             this.UserID = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.SelectPanel = new System.Windows.Forms.Panel();
-            this.LoginSelect = new System.Windows.Forms.Button();
             this.RegisterSelect = new System.Windows.Forms.Button();
+            this.LoginSelect = new System.Windows.Forms.Button();
             this.RegisterPanel.SuspendLayout();
             this.LoginPanel.SuspendLayout();
             this.SelectPanel.SuspendLayout();
@@ -127,16 +127,6 @@
             this.SelectPanel.Size = new System.Drawing.Size(240, 82);
             this.SelectPanel.TabIndex = 3;
             // 
-            // LoginSelect
-            // 
-            this.LoginSelect.Location = new System.Drawing.Point(23, 13);
-            this.LoginSelect.Name = "LoginSelect";
-            this.LoginSelect.Size = new System.Drawing.Size(197, 23);
-            this.LoginSelect.TabIndex = 0;
-            this.LoginSelect.Text = "Login";
-            this.LoginSelect.UseVisualStyleBackColor = true;
-            this.LoginSelect.Click += new System.EventHandler(this.LoginSelect_Click);
-            // 
             // RegisterSelect
             // 
             this.RegisterSelect.Location = new System.Drawing.Point(23, 42);
@@ -147,6 +137,16 @@
             this.RegisterSelect.UseVisualStyleBackColor = true;
             this.RegisterSelect.Click += new System.EventHandler(this.RegisterSelect_Click);
             // 
+            // LoginSelect
+            // 
+            this.LoginSelect.Location = new System.Drawing.Point(23, 13);
+            this.LoginSelect.Name = "LoginSelect";
+            this.LoginSelect.Size = new System.Drawing.Size(197, 23);
+            this.LoginSelect.TabIndex = 0;
+            this.LoginSelect.Text = "Login";
+            this.LoginSelect.UseVisualStyleBackColor = true;
+            this.LoginSelect.Click += new System.EventHandler(this.LoginSelect_Click);
+            // 
             // StartForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -156,6 +156,7 @@
             this.Controls.Add(this.LoginPanel);
             this.Controls.Add(this.RegisterPanel);
             this.Name = "StartForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "StartForm";
             this.RegisterPanel.ResumeLayout(false);
             this.RegisterPanel.PerformLayout();
