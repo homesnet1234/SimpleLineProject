@@ -22,8 +22,8 @@ namespace SimpleLineClient
         private NetworkStream stream;
         private List<ChatRoom> rooms;
         private int chat_startpoint = 60;
-        private string ip1 = "127.0.0.1";
-        private string ip2 = "127.0.0.2";
+        private string ip1 = "192.168.43.161";
+        private string ip2 = "192.168.43.115";
         private int port = 8888;
 
         public MainApp()
@@ -292,7 +292,7 @@ namespace SimpleLineClient
             // TitleBar Color
             g.FillRectangle(Brushes.ForestGreen, 0, 0, this.Width - this.PreferredSize.Width, 60);
             g.DrawImage(Image.FromFile("./res/img/addfriend_icon.png"), this.Width - this.PreferredSize.Width - 45, 12, 40, 40);
-            g.DrawString(user.Username, font, Brushes.White, new RectangleF(20, 15, this.Width - this.PreferredSize.Width - 45, 60));
+            g.DrawString(user.Username + " (" + user.UserId + ")", font, Brushes.White, new RectangleF(20, 15, this.Width - this.PreferredSize.Width - 45, 60));
         }
 
         private void Form1_MouseDown(object sender, MouseEventArgs e)

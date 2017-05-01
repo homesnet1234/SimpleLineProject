@@ -26,7 +26,7 @@ namespace SimpleLineProject
         Dictionary<string, NetworkStream> clientUsers;
         Queue<Tuple<User, Message>> message_offine; // message for offline user, send when user online
         Queue<Tuple<Group, Message>> message_online; // message that send to online user
-        private string ip = "127.0.0.1";
+        private string ip = "192.168.43.161";
         private int port = 8888;
 
         public Server()

@@ -25,8 +25,8 @@ namespace ReserveServer
         Dictionary<string, NetworkStream> clientUsers;
         Queue<Tuple<User, Message>> message_offine; // message for offline user, send when user online
         Queue<Tuple<Group, Message>> message_online; // message that send to online user
-        private string ip1 = "127.0.0.1";
-        private string ip2 = "127.0.0.2";
+        private string ip1 = "192.168.43.161";
+        private string ip2 = "192.168.43.115";
         private int port = 8888;
 
         public ReserveServer()
